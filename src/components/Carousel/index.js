@@ -19,6 +19,9 @@ const Carousel = () => {
   );
 
   const selectPrevCard = () => {
+    if (cardState[0].cardSelected) {
+      return;
+    }
     setCardState((prev) => {
       const newCardState = [...prev];
       const [selectedCard] = newCardState.filter((item) => item.cardSelected);
@@ -35,6 +38,9 @@ const Carousel = () => {
   };
 
   const selectNextCard = () => {
+    if (cardState[cardState.length - 1].cardSelected) {
+      return;
+    }
     setCardState((prev) => {
       const newCardState = [...prev];
       const [selectedCard] = newCardState.filter((item) => item.cardSelected);
