@@ -7,12 +7,30 @@ import {
   PanResponder,
   Animated,
   useWindowDimensions,
+  TouchableOpacity,
 } from 'react-native';
+
+const AnimatedSlideView = () => {};
 
 const App = () => {
   const dims = useWindowDimensions();
   const panX = useRef(new Animated.Value(0)).current;
   const panXY = useRef(new Animated.ValueXY()).current;
+
+  const SNAP_THRESHOLD = dims.width * 0.25;
+  console.log('width', dims.width);
+
+  // const snapFromRightToLeftInterpolation = panX.interpolate({
+  //   inputRange: [0, -dims.width],
+  //   outputRange: [0, -dims.width],
+  // });
+
+  const snapFromRightToLeft = () =>
+    Animated.spring(panX, {
+      toValue: -dims.width,
+      bounciness: 0,
+      useNativeDriver: false,
+    }).start();
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -33,6 +51,7 @@ const App = () => {
         // The most recent move distance is gestureState.move{X,Y}
         // The accumulated gesture distance since becoming responder is
         // gestureState.d{x,y}
+        console.log(gestureState, panX);
         Animated.event(
           [
             null,
@@ -49,10 +68,24 @@ const App = () => {
       onPanResponderRelease: (evt, gestureState) => {
         // The user has released all touches while this view is the
         // responder. This typically means a gesture has succeeded
-        Animated.spring(panX, {
-          toValue: 0,
-          useNativeDriver: false,
-        }).start();
+        // console.log(JSON.stringify(gestureState, null, 2));
+        // console.log(gestureState);
+        if (Math.abs(gestureState.dx) >= SNAP_THRESHOLD) {
+          console.log('will snap');
+          console.log(gestureState);
+          Animated.spring(panX, {
+            toValue: -dims.width,
+            bounciness: 0,
+            useNativeDriver: false,
+            velocity: gestureState.vx,
+          }).start();
+        } else {
+          Animated.spring(panX, {
+            toValue: 0,
+            useNativeDriver: false,
+            bounciness: 0,
+          }).start();
+        }
       },
       onPanResponderTerminate: (evt, gestureState) => {
         // Another component has become the responder, so this gesture
@@ -84,6 +117,7 @@ const App = () => {
               backgroundColor: 'blue',
               transform: [
                 {
+                  // translateX: panX,
                   translateX: panX,
                 },
               ],
@@ -92,6 +126,19 @@ const App = () => {
           {...panResponder.panHandlers}>
           <Text>3</Text>
         </Animated.View>
+        <TouchableOpacity
+          onPress={() => {
+            snapFromRightToLeft();
+          }}
+          style={{
+            padding: 24,
+            borderRadius: 4,
+            backgroundColor: '#000',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text style={{ color: '#fff' }}>test</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
